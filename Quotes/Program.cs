@@ -1,4 +1,5 @@
 using Quotes.Application;
+using Quotes.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ BuilderServices builderServices = new(builder);
 builderServices.AddScoped();
 builderServices.AddDataBase();
 builderServices.AddAutoMapper();
+builderServices.JwtBearer();
 
 
 var app = builder.Build();
@@ -25,6 +27,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseAuthentication();
+
+app.UseMiddleware<JwtTokenMiddleware>();
 
 app.MapControllers();
 

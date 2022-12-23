@@ -1,4 +1,6 @@
 ﻿
+using Quotes.Helper;
+
 namespace Quotes.Base
 {
     public class BaseEntity
@@ -6,7 +8,7 @@ namespace Quotes.Base
         public BaseEntity()
         {
             CreatedBy = "";
-            CreatedAt = DateTime.Now.ToString("dd-MMM-yyyy HH:mm tt");
+            CreatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
             UpdatedBy = "";
             UpdatedAt = "";
             IsDelete = false;
