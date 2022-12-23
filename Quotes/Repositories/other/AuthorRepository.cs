@@ -29,7 +29,16 @@ namespace Quotes.Repositories.other
             {
                 return Constants.InputLength(request, 4);
             }
-
+            var year = (int)DateTime.Now.Year;
+            //    if (request.BirthYear > year || request.BirthYear < 1900)
+            if (request.BirthYear > year)
+            {
+                return Constants.UnprocessableEntityResponse("Error in the date of birth of the author!", null);
+            }
+            if (request.DeathYear > year)
+            {
+                return Constants.UnprocessableEntityResponse("Error in the date of the year of death of the author!", null);
+            }
             var localItem = _dbContext.Authors.Where(
                 x => x.Name == request.Name &&
                 x.BirthYear == request.BirthYear &&
@@ -69,8 +78,17 @@ namespace Quotes.Repositories.other
             {
                 return Constants.InputLength(request, 4);
             }
+            var year = (int)DateTime.Now.Year;
+            if (request.BirthYear > year || request.BirthYear < 1900)
+            {
+                return Constants.UnprocessableEntityResponse("Error in the date of birth of the author!", null);
+            }
+            if (request.DeathYear > year)
+            {
+                return Constants.UnprocessableEntityResponse("Error in the date of the year of death of the author!", null);
+            }
 
-            localItem.UpdatedAt = DateTime.Now.ToString("dd-MMM-yyyy HH:mm tt");
+            localItem.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
             var currentItem = _map.Map(request, localItem);
             _dbContext.Authors.Update(currentItem);
             _dbContext.SaveChanges();

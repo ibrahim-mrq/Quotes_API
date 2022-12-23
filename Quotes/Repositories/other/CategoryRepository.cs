@@ -54,7 +54,7 @@ namespace Resturants.Repositories.other
             {
                 return Constants.InputValidation(request);
             }
-            localItem.UpdatedAt = DateTime.Now.ToString("dd-MMM-yyyy HH:mm tt");
+            localItem.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
             var currentItem = _map.Map(request, localItem);
             _dbContext.Categories.Update(currentItem);
             _dbContext.SaveChanges();

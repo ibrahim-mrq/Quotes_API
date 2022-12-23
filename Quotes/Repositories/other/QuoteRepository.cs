@@ -64,7 +64,7 @@ namespace Resturants.Repositories.other
             {
                 return Constants.NotFoundResponse("Category Id Not Found!", null);
             }
-            localItem.UpdatedAt = DateTime.Now.ToString("dd-MMM-yyyy HH:mm tt");
+            localItem.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
             var currentItem = _map.Map(request, localItem);
             _dbContext.Quotes.Update(currentItem);
             _dbContext.SaveChanges();

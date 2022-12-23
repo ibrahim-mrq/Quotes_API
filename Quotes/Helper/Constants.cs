@@ -7,6 +7,7 @@ namespace Quotes.Helper
 
         public static readonly string TYPE_LOGO = "https://www.wepal.net/ar/uploads/2732018-073911PM-1.jpg";
         public static readonly string TYPE_LOCAL_URL = "https://localhost:7194/Images/";
+        public static readonly string TYPE_DATE_TIME_FORMATER = "dd-MMM-yyyy HH:mm tt";
 
 
         public static OperationType InputValidation(int value)

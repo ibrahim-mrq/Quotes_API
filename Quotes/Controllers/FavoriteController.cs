@@ -19,7 +19,7 @@ namespace Quotes.Controllers
         }
 
 
-        [HttpPost("add_favorite")]
+        [HttpPost("add_to_favorite")]
         public IActionResult Add([FromForm] AddFavoriteRequest request)
         {
             return ReturnActionResult(repository.Add(request));
@@ -50,5 +50,7 @@ namespace Quotes.Controllers
         {
             return ReturnActionResult(repository.Clear());
         }
+
+
     }
 }

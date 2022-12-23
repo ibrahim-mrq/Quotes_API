@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Azure.Core;
+using Microsoft.IdentityModel.Tokens;
 using Quotes.DTO.Requests;
 using Quotes.DTO.Responses;
 using Quotes.Helper;
@@ -35,73 +35,40 @@ namespace Quotes.Repositories.other
             {
                 return Constants.NotFoundResponse("Quote Id Not Found!", null);
             }
-
-            var localItem = _dbContext.Favorites.Where(
-                x => x.UserId == request.UserId &&
-                x.QuoteId == request.QuoteId &&
-                x.IsDelete == false).FirstOrDefault();
-
-            if (localItem != null)
+            var localFavorite = _dbContext.Favorites.Where(x => x.UserId == request.UserId && x.QuoteId == request.QuoteId).FirstOrDefault();
+            var favoriteResponse = new FavoriteResponse();
+            var currentItem = new Favorite();
+            var message = "";
+            if (localFavorite != null)
             {
-                return Constants.NotFoundResponse("Favorite Id Already Exist!", null);
+                if (localFavorite.IsDelete)
+                {
+                    localFavorite.IsDelete = false;
+                    message = "Add Favorite successfully";
+                }
+                else
+                {
+                    localFavorite.IsDelete = true;
+                    message = "Remove Favorite successfully";
+                }
+                _dbContext.Favorites.Update(localFavorite);
+                favoriteResponse = _map.Map<FavoriteResponse>(localFavorite);
+                favoriteResponse.Quote = _map.Map<FavoriteQuoteResponse>(localQuote);
+                favoriteResponse.IsFavorite = !localFavorite.IsDelete;
+                favoriteResponse.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
             }
-
-            var currentItem = _map.Map<Favorite>(request);
-            var favoriteResponse = _map.Map<FavoriteResponse>(currentItem);
-            favoriteResponse.Quote = _map.Map<FavoriteQuoteResponse>(localQuote);
-            favoriteResponse.IsFavorite = true;
-            _dbContext.Favorites.Add(currentItem);
+            else
+            {
+                currentItem = _map.Map<Favorite>(request);
+                favoriteResponse = _map.Map<FavoriteResponse>(currentItem);
+                favoriteResponse.Quote = _map.Map<FavoriteQuoteResponse>(localQuote);
+                favoriteResponse.IsFavorite = true;
+                _dbContext.Favorites.Add(currentItem);
+                message = "Add Favorite successfully";
+            }
             _dbContext.SaveChanges();
-            return Constants.SuccessResponse("Add Favorite successfully", new { Favorite = favoriteResponse });
+            return Constants.SuccessResponse(message, new { Favorite = favoriteResponse });
         }
-
-        /*     public OperationType Add(AddFavoriteRequest request)
-             {
-                 if (!Constants.InputValidation(request).Status)
-                 {
-                     return Constants.InputValidation(request);
-                 }
-                 var localUser = _dbContext.Users.Where(x => x.Id == request.UserId && x.IsDelete == false).FirstOrDefault();
-                 if (localUser == null)
-                 {
-                     return Constants.NotFoundResponse("User Id Not Found!", null);
-                 }
-                 var localQuote = _dbContext.Quotes.Where(x => x.Id == request.QuoteId && x.IsDelete == false).FirstOrDefault();
-                 if (localQuote == null)
-                 {
-                     return Constants.NotFoundResponse("Quote Id Not Found!", null);
-                 }
-
-                 var localItem = _dbContext.Favorites.Where(x => x.UserId == request.UserId && x.QuoteId == request.QuoteId).FirstOrDefault();
-                 if (localItem != null)
-                 {
-                     var message = "";
-                     if (localItem.IsDelete == true)
-                     {
-                         localItem.IsDelete = false;
-                         message = "Add Favorite successfully";
-                     }
-                     else
-                     {
-                         localItem.IsDelete = true;
-                         message = "remove Favorite successfully";
-                     }
-                     var response = _map.Map<FavoriteResponse>(localItem);
-                     response.IsFavorite = !localItem.IsDelete;
-                     response.Quote = _map.Map<FavoriteQuoteResponse>(localQuote);
-                     _dbContext.Favorites.Update(localItem);
-                     _dbContext.SaveChanges();
-                     return Constants.SuccessResponse(message, new { Favorite = response });
-                 }
-
-                 var currentItem = _map.Map<Favorite>(request);
-                 var favoriteResponse = _map.Map<FavoriteResponse>(currentItem);
-                 favoriteResponse.Quote = _map.Map<FavoriteQuoteResponse>(localQuote);
-                 favoriteResponse.IsFavorite = true;
-                 _dbContext.Favorites.Add(currentItem);
-                 _dbContext.SaveChanges();
-                 return Constants.SuccessResponse("Add Favorite successfully", new { Favorite = favoriteResponse });
-             }*/
 
         public OperationType Delete(DeleteFavoriteRequest request)
         {
@@ -137,9 +104,22 @@ namespace Quotes.Repositories.other
             {
                 return Constants.NotFoundResponse("User Id Not Found!", null);
             }
-            var localList = _dbContext.Favorites.Where(x => x.UserId.Equals(UserId) && x.IsDelete == false).ToList();
-            var filter = _map.Map<List<Favorite>, List<FavoriteResponse>>(localList);
-            return Constants.SuccessResponse("successfull", new { Quotes = filter });
+            var localListFavorites = _dbContext.Favorites.Where(x => x.UserId.Equals(UserId) && x.IsDelete == false).ToList();
+            var locaalFavoritesResponse = _map.Map<List<Favorite>, List<FavoriteResponse>>(localListFavorites);
+            var localListQuote = _dbContext.Quotes.Where(x => x.IsDelete == false).ToList();
+            if (!localListQuote.IsNullOrEmpty())
+            {
+                var localList = locaalFavoritesResponse.Zip(localListQuote, (f, q) => new { favorit = f, quote = q });
+                foreach (var item in localList)
+                {
+                    if (item.quote.Id == item.favorit.QuoteId)
+                    {
+                        item.favorit.Quote = _map.Map<FavoriteQuoteResponse>(item.quote);
+                        item.favorit.IsFavorite = true;
+                    }
+                }
+            }
+            return Constants.SuccessResponse("successfull", new { favorites = locaalFavoritesResponse });
         }
 
         public OperationType GetByFavoriteId(int FavoriteId)
@@ -148,9 +128,24 @@ namespace Quotes.Repositories.other
             {
                 return Constants.InputValidation(FavoriteId);
             }
-            var localList = _dbContext.Favorites.Where(x => x.Id.Equals(FavoriteId) && x.IsDelete == false).FirstOrDefault();
-            return Constants.SuccessResponse("successfull", new { Favorites = _map.Map<FavoriteResponse>(localList) });
+            var localFavorite = _dbContext.Favorites.Where(x => x.Id.Equals(FavoriteId) && x.IsDelete == false).FirstOrDefault();
+            if (localFavorite == null)
+            {
+                return Constants.NotFoundResponse("Favorite Id Not Found!", null);
+            }
+            var locaalFavoriteResponse = _map.Map<FavoriteResponse>(localFavorite);
+            var localListQuote = _dbContext.Quotes.Where(x => x.IsDelete == false).ToList();
+            foreach (var item in localListQuote)
+            {
+                if (item.Id == locaalFavoriteResponse.QuoteId)
+                {
+                    locaalFavoriteResponse.Quote = _map.Map<FavoriteQuoteResponse>(item);
+                    locaalFavoriteResponse.IsFavorite = true;
+                }
+            }
+            return Constants.SuccessResponse("successfull", new { favorites = locaalFavoriteResponse });
         }
+
 
         public OperationType Clear()
         {
