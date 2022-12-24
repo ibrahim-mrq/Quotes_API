@@ -1,4 +1,5 @@
-﻿using Quotes.Repositories.Interfaces;
+﻿using Quotes.Authorize;
+using Quotes.Repositories.Interfaces;
 
 namespace Quotes.Middlewares
 {
@@ -21,10 +22,9 @@ namespace Quotes.Middlewares
                 _ = context.Response.WriteAsJsonAsync(new
                 {
                     status = false,
-                    message = "You are festic",
+                    message = "You are festic, unauthorized",
                     code = 401,
                 });
-                return;
             }
             else
             {

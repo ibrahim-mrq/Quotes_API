@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Quotes.Authorize;
 using Quotes.Helper;
-using Quotes.Middlewares;
 using Quotes.Repositories.Interfaces;
 using Quotes.Repositories.other;
 using Resturants.Repositories.other;

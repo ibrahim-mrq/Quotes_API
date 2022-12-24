@@ -1,9 +1,14 @@
 ﻿using AutoMapper;
+using Microsoft.IdentityModel.Tokens;
 using Quotes.DTO.Requests;
 using Quotes.DTO.Responses;
 using Quotes.Helper;
 using Quotes.Models;
 using Quotes.Repositories.Interfaces;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Policy;
+using System.Text;
 
 namespace Quotes.Repositories.other
 {
@@ -18,52 +23,73 @@ namespace Quotes.Repositories.other
             this._map = map;
         }
 
-
-        public OperationType Add(AddAuthorRequest request)
+        public OperationType Login(LoginRequest request)
         {
             if (!Constants.InputValidation(request).Status)
             {
                 return Constants.InputValidation(request);
             }
-            if (!Constants.InputLength(request, 4).Status)
+            var localUser = _dbContext.Users.Where(x => x.Email == request.Email && x.IsDelete == false).FirstOrDefault();
+            if (localUser == null)
             {
-                return Constants.InputLength(request, 4);
+                return Constants.NotFoundResponse("User Not Found!", null);
             }
-            var year = (int)DateTime.Now.Year;
-            //    if (request.BirthYear > year || request.BirthYear < 1900)
-            if (request.BirthYear > year)
+            if (!Constants.ValidateHash(request.Password, localUser.PasswordHash, localUser.PasswordSalt))
             {
-                return Constants.UnprocessableEntityResponse("Error in the date of birth of the author!", null);
+                return Constants.UnprocessableEntityResponse("The password is incorrect!", null); ;
             }
-            if (request.DeathYear > year)
-            {
-                return Constants.UnprocessableEntityResponse("Error in the date of the year of death of the author!", null);
-            }
-            var localItem = _dbContext.Authors.Where(
-                x => x.Name == request.Name &&
-                x.BirthYear == request.BirthYear &&
-                x.BirthCountry == request.BirthCountry &&
-                x.DeathYear == request.DeathYear
-                ).FirstOrDefault();
+            localUser.DeviceToken = request.DeviceToken;
+            localUser.DeviceType = request.DeviceType;
+            localUser.Token = GenerateToken(localUser);
 
-            if (localItem != null && localItem.IsDelete == true)
-            {
-                localItem.IsDelete = false;
-                _dbContext.Authors.Update(localItem);
-                _dbContext.SaveChanges();
-                return Constants.SuccessResponse("Add Author successfully", new { Author = _map.Map<AuthorResponse>(localItem) });
-            }
-            else if (localItem != null && localItem.IsDelete == false)
-            {
-                return Constants.SuccessResponse("Author Already Exist!", new { Author = _map.Map<AuthorResponse>(localItem) });
-            }
-            var currentItem = _map.Map<Author>(request);
-            _dbContext.Authors.Add(currentItem);
+            _dbContext.Users.Update(localUser);
             _dbContext.SaveChanges();
-            return Constants.SuccessResponse("Add Author successfully", new { Author = _map.Map<AuthorResponse>(currentItem) });
+            return Constants.SuccessResponse("Add Author successfully", new { user = _map.Map<UserResponse>(localUser) });
         }
 
-        public OperationType Update(int AuthorId, AddAuthorRequest request)
+        public OperationType Register(RegisterRequest request)
+        {
+            if (!Constants.InputValidation(request).Status)
+            {
+                return Constants.InputValidation(request);
+            }
+            if (!Constants.InputValidationPasswordLength($"{request.Password}").Status)
+            {
+                return Constants.InputValidationPasswordLength($"{request.Password}");
+            }
+            byte[] hash, salt;
+            var localUser = _dbContext.Users.Where(x => x.Email == request.Email).FirstOrDefault();
+            if (localUser != null && localUser.IsDelete == true)
+            {
+                localUser.IsDelete = false;
+                localUser.Name = request.Name;
+                localUser.DeviceToken = request.DeviceToken;
+                localUser.DeviceType = request.DeviceType;
+                localUser.Token = GenerateToken(localUser);
+
+                Constants.GenerateHash(request.Password, out hash, out salt);
+                localUser.PasswordHash = hash;
+                localUser.PasswordSalt = salt;
+
+                _dbContext.Users.Update(localUser);
+                _dbContext.SaveChanges();
+                return Constants.SuccessResponse("Register successfully", new { user = _map.Map<UserResponse>(localUser) });
+            }
+            else if (localUser != null && localUser.IsDelete == false)
+            {
+                return Constants.BadRequestResponse("Email Already Exist!", null);
+            }
+            var currentItem = _map.Map<User>(request);
+            Constants.GenerateHash(request.Password, out hash, out salt);
+            currentItem.PasswordHash = hash;
+            currentItem.PasswordSalt = salt;
+            currentItem.Token = GenerateToken(currentItem);
+            _dbContext.Users.Add(currentItem);
+            _dbContext.SaveChanges();
+            return Constants.SuccessResponse("Register successfully", new { user = _map.Map<UserResponse>(currentItem) });
+        }
+
+        public OperationType Update(int AuthorId, RegisterRequest request)
         {
             var localItem = _dbContext.Authors.Where(x => x.Id.Equals(AuthorId) && x.IsDelete == false).SingleOrDefault();
             if (localItem == null)
@@ -78,21 +104,7 @@ namespace Quotes.Repositories.other
             {
                 return Constants.InputLength(request, 4);
             }
-            var year = (int)DateTime.Now.Year;
-            if (request.BirthYear > year || request.BirthYear < 1900)
-            {
-                return Constants.UnprocessableEntityResponse("Error in the date of birth of the author!", null);
-            }
-            if (request.DeathYear > year)
-            {
-                return Constants.UnprocessableEntityResponse("Error in the date of the year of death of the author!", null);
-            }
-
-            localItem.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
-            var currentItem = _map.Map(request, localItem);
-            _dbContext.Authors.Update(currentItem);
-            _dbContext.SaveChanges();
-            return Constants.SuccessResponse("Update Author successfully", new { Author = _map.Map<AuthorResponse>(currentItem) });
+            return Constants.SuccessResponse("Update Author successfully", null);
         }
 
         public OperationType Delete(int AuthorId)
@@ -123,7 +135,7 @@ namespace Quotes.Repositories.other
                 return Constants.NotFoundResponse("User Id not exists!", null);
             }
             return Constants.SuccessResponse("successfull", new { User = localList });
-         //   return Constants.SuccessResponse("successfull", new { Author = _map.Map<AuthorResponse>(localList) });
+            //   return Constants.SuccessResponse("successfull", new { Author = _map.Map<AuthorResponse>(localList) });
         }
 
         public OperationType Clear()
@@ -132,6 +144,79 @@ namespace Quotes.Repositories.other
             _dbContext.Authors.RemoveRange(list);
             _dbContext.SaveChanges();
             return Constants.SuccessResponse("All Authors have been successfully deleted!", null);
+        }
+
+
+        public string GenerateToken(string Email, int Id)
+        {
+            var key = Encoding.ASCII.GetBytes("LZImjD2eUbUxhxjIdyOJuYT4FjWhKSJy");
+            var descriptor = new SecurityTokenDescriptor
+            {
+                Expires = DateTime.UtcNow.AddMonths(12),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature),
+                Subject = new ClaimsIdentity(
+                    new Claim[] {
+                        new Claim(JwtRegisteredClaimNames.Email , Email),
+                        new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString()),
+                        new Claim("userId" , Id.ToString()),
+                    }
+                )
+            };
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.CreateToken(descriptor);
+            return handler.WriteToken(token);
+        }
+
+        public string GenerateToken(User user)
+        {
+            var key = Encoding.ASCII.GetBytes("LZImjD2eUbUxhxjIdyOJuYT4FjWhKSJy");
+            var descriptor = new SecurityTokenDescriptor
+            {
+                Expires = DateTime.UtcNow.AddMonths(12),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature),
+                Subject = new ClaimsIdentity(
+                    new Claim[] {
+                        new Claim(JwtRegisteredClaimNames.Email , user.Email),
+                        new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString()),
+                        new Claim("userId" , user.Id.ToString()),
+                    }
+                )
+            };
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.CreateToken(descriptor);
+            return handler.WriteToken(token);
+        }
+
+        public int? IsValideteToken(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return null;
+            }
+
+            var key = Encoding.ASCII.GetBytes("LZImjD2eUbUxhxjIdyOJuYT4FjWhKSJy");
+            var handler = new JwtSecurityTokenHandler();
+            try
+            {
+                handler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    // ClockSkew = TimeSpan.FromMinutes(1),
+                    ClockSkew = TimeSpan.Zero,
+
+                }, out SecurityToken validetedToken);
+
+                var jwtToken = (JwtSecurityToken)validetedToken;
+                var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "userId").Value);
+                return userId;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
 

@@ -10,6 +10,9 @@ namespace Quotes.Helper
         public AutoMapperProfile()
         {
 
+            CreateMap<RegisterRequest, User>();
+            CreateMap<User, UserResponse>();
+
             CreateMap<AddQuoteRequest, Quote>();
             CreateMap<Quote, QuoteResponse>();
 
@@ -24,8 +27,6 @@ namespace Quotes.Helper
 
             CreateMap<AddFavoriteRequest, Favorite>();
             CreateMap<Favorite, FavoriteResponse>();
-
-
             CreateMap<Quote, FavoriteQuoteResponse>();
         }
     }

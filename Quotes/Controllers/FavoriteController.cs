@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
+﻿using Microsoft.AspNetCore.Mvc;
+using Quotes.Authorize;
 using Quotes.Base;
 using Quotes.DTO.Requests;
-using Quotes.Middlewares;
 using Quotes.Repositories.Interfaces;
 
 namespace Quotes.Controllers
@@ -35,7 +33,7 @@ namespace Quotes.Controllers
             });
         }
 
-    
+
         [HttpPost("add_to_favorite")]
         public IActionResult Add([FromForm] AddFavoriteRequest request)
         {

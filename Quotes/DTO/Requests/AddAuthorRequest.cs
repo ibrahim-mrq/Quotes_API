@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Quotes.DTO.Requests
+﻿namespace Quotes.DTO.Requests
 {
     public class AddAuthorRequest
     {

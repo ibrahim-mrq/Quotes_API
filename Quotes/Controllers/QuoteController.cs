@@ -8,6 +8,7 @@ namespace Quotes.Controllers
     //  [Route("api/[controller]")]
     [Route("api/quote")]
     [ApiController]
+    //  [Consumes("application/json")]
     public class QuoteController : BaseController
     {
 

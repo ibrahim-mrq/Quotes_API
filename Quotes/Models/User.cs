@@ -13,7 +13,6 @@ namespace Quotes.Models
         public string? DeviceType { get; set; }
         public string? DeviceToken { get; set; }
 
-        public float TotalPayment { get; set; }
         public byte[]? PasswordHash { get; set; }
         public byte[]? PasswordSalt { get; set; }
         public string? Token { get; set; }

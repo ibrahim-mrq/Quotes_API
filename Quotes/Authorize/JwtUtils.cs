@@ -4,11 +4,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Quotes.Middlewares
+namespace Quotes.Authorize
 {
     public class JwtUtils : IJwtUtils
     {
-        public string GenerateToken(string Email , int Id)
+        public string GenerateToken(string Email, int Id)
         {
             var key = Encoding.ASCII.GetBytes("LZImjD2eUbUxhxjIdyOJuYT4FjWhKSJy");
             var descriptor = new SecurityTokenDescriptor

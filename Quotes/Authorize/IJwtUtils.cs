@@ -1,6 +1,6 @@
 ﻿using Quotes.Models;
 
-namespace Quotes.Middlewares
+namespace Quotes.Authorize
 {
     public interface IJwtUtils
     {

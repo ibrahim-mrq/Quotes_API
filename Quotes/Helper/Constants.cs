@@ -21,7 +21,7 @@ namespace Quotes.Helper
 
             if (value <= 0 || value == null)
             {
-                operationType. Message = "The " + value + " can't be null or blank!";
+                operationType.Message = "The " + value + " can't be null or blank!";
                 operationType.Status = false;
             }
 
@@ -87,6 +87,23 @@ namespace Quotes.Helper
                 }
             }
             operationType.Data = new { error = errorist };
+            return operationType;
+        }
+
+        public static OperationType InputValidationPasswordLength(string value)
+        {
+            var operationType = new OperationType()
+            {
+                Status = true,
+                Message = "Invalid Input Data!",
+                Code = 422,
+                Data = null,
+            };
+            if (value.Length < 6)
+            {
+                operationType.Message = ("Password must be greater than 6 characters!");
+                operationType.Status = false;
+            }
             return operationType;
         }
 
