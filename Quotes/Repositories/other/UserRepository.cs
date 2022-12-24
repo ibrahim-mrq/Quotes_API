@@ -140,10 +140,10 @@ namespace Quotes.Repositories.other
 
         public OperationType Clear()
         {
-            var list = _dbContext.Authors.ToList();
-            _dbContext.Authors.RemoveRange(list);
+            var list = _dbContext.Users.ToList();
+            _dbContext.Users.RemoveRange(list);
             _dbContext.SaveChanges();
-            return Constants.SuccessResponse("All Authors have been successfully deleted!", null);
+            return Constants.SuccessResponse("All Users have been successfully deleted!", null);
         }
 
 
