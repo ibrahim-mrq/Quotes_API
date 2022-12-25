@@ -20,5 +20,7 @@ namespace Quotes.Repositories.Interfaces
         string GenerateToken(User user);
         int? IsValideteToken(string token);
 
+        void SendEmail(string to, string subject, string html, string from);
+
     }
 }

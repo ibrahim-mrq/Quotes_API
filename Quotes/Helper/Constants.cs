@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using Microsoft.VisualStudio.Services.Commerce;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Quotes.Helper
 {
@@ -8,9 +11,17 @@ namespace Quotes.Helper
         public static readonly string TYPE_LOGO = "https://www.wepal.net/ar/uploads/2732018-073911PM-1.jpg";
         public static readonly string TYPE_LOCAL_URL = "https://localhost:7194/Images/";
         public static readonly string TYPE_DATE_TIME_FORMATER = "dd-MMM-yyyy HH:mm tt";
-        //  public static readonly DateTime EXPIRATION_TOKEN_DATE = DateTime.Now.AddMonths(12);
-        public static readonly DateTime EXPIRATION_TOKEN_DATE = DateTime.Now.AddMinutes(2);
+        public static readonly DateTime EXPIRATION_TOKEN_DATE = DateTime.Now.AddMonths(12);
+        // public static readonly DateTime EXPIRATION_TOKEN_DATE = DateTime.Now.AddMinutes(2);
 
+
+        public static bool IsValidEmail(string? email)
+        {
+            if (string.IsNullOrEmpty(email)) return false;
+            string pattern = @"^(?!\.)(""([^""\r\\]|\\[""\r\\])*""|" + @"([-a-z0-9!#$%&'*+/=?^_`{|}~]|(?<!\.)\.)*)(?<!\.)" + @"@[a-z0-9][\w\.-]*[a-z0-9]\.[a-z][a-z\.]*[a-z]$";
+            var regex = new Regex(pattern, RegexOptions.IgnoreCase);
+            return regex.IsMatch(email);
+        }
 
         public static OperationType InputValidation(int? value)
         {

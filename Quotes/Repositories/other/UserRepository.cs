@@ -8,6 +8,10 @@ using Quotes.Repositories.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using MailKit.Security;
+using MimeKit;
+using MimeKit.Text;
+using MailKit.Net.Smtp;
 
 namespace Quotes.Repositories.other
 {
@@ -28,6 +32,11 @@ namespace Quotes.Repositories.other
             {
                 return Constants.InputValidation(request);
             }
+            /*if (!Constants.IsValidEmail(request.Email))
+            {
+                return Constants.UnprocessableEntityResponse("Please use a valid email!", null);
+            }*/
+
             var localUser = _dbContext.Users.Where(x => x.Email == request.Email && x.IsDelete == false).FirstOrDefault();
             if (localUser == null)
             {
@@ -225,6 +234,28 @@ namespace Quotes.Repositories.other
             {
                 return null;
             }
+        }
+
+        public void SendEmail(string To, string Subject, string Body, string From)
+        {
+            // create message
+            var email = new MimeMessage();
+            email.From.Add(MailboxAddress.Parse(From));
+            email.To.Add(MailboxAddress.Parse(To));
+            email.Subject = Subject;
+            email.Body = new TextPart(TextFormat.Plain) { Text = Body };
+
+            // send email
+            using var smtp = new SmtpClient();
+            smtp.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+            smtp.Connect("smtp.live.com", 587, SecureSocketOptions.StartTls);
+            smtp.Connect("smtp.office365.com", 587, SecureSocketOptions.StartTls);
+            smtp.Connect("email-smtp.[AWS REGION].amazonaws.com", 587, SecureSocketOptions.StartTls);
+
+            smtp.Authenticate("[USERNAME]", "[PASSWORD]");
+            smtp.Send(email);
+            smtp.Disconnect(true);
+
         }
 
 
