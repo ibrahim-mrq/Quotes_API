@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.IdentityModel.Tokens;
-using Quotes.DTO.Requests;
 using Quotes.DTO.Responses;
 using Quotes.Helper;
 using Quotes.Models;
@@ -12,6 +11,7 @@ using MailKit.Security;
 using MimeKit;
 using MimeKit.Text;
 using MailKit.Net.Smtp;
+using Quotes.DTO.Requests.User;
 
 namespace Quotes.Repositories.other
 {
@@ -236,7 +236,7 @@ namespace Quotes.Repositories.other
             }
         }
 
-        public void SendEmail(string To, string Subject, string Body, string From)
+        public void SendEmail(string From, string To, string Subject, string Body)
         {
             // create message
             var email = new MimeMessage();
@@ -248,11 +248,11 @@ namespace Quotes.Repositories.other
             // send email
             using var smtp = new SmtpClient();
             smtp.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-            smtp.Connect("smtp.live.com", 587, SecureSocketOptions.StartTls);
-            smtp.Connect("smtp.office365.com", 587, SecureSocketOptions.StartTls);
-            smtp.Connect("email-smtp.[AWS REGION].amazonaws.com", 587, SecureSocketOptions.StartTls);
+            //      smtp.Connect("smtp.live.com", 587, SecureSocketOptions.StartTls);
+            // smtp.Connect("smtp.office365.com", 587, SecureSocketOptions.StartTls);
+            // smtp.Connect("email-smtp.[AWS REGION].amazonaws.com", 587, SecureSocketOptions.StartTls);
 
-            smtp.Authenticate("[USERNAME]", "[PASSWORD]");
+            smtp.Authenticate("seven.arts.ku@gmail.com", "fneyqxlrzjjdqbsi");
             smtp.Send(email);
             smtp.Disconnect(true);
 

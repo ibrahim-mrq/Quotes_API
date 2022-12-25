@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using Quotes.Models;
-using Quotes.DTO.Requests;
 using Quotes.DTO.Responses;
 using Quotes.Helper;
 using Quotes.Repositories.Interfaces;
+using Quotes.DTO.Requests.Other;
 
 namespace Resturants.Repositories.other
 {

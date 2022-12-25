@@ -1,4 +1,4 @@
-﻿using Quotes.DTO.Requests;
+﻿using Quotes.DTO.Requests.Other;
 using Quotes.Helper;
 
 namespace Quotes.Repositories.Interfaces

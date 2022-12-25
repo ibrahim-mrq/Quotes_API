@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using Quotes.Models;
-using Quotes.DTO.Requests;
 using Quotes.DTO.Responses;
+using Quotes.DTO.Requests.Other;
+using Quotes.DTO.Requests.User;
 
 namespace Quotes.Helper
 {

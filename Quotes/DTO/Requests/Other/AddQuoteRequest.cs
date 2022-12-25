@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Quotes.DTO.Requests
+namespace Quotes.DTO.Requests.Other
 {
     public class AddQuoteRequest
     {

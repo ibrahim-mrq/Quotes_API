@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.IdentityModel.Tokens;
-using Quotes.DTO.Requests;
+using Quotes.DTO.Requests.Other;
 using Quotes.DTO.Responses;
 using Quotes.Helper;
 using Quotes.Models;

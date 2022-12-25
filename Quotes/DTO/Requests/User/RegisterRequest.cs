@@ -1,7 +1,8 @@
-﻿namespace Quotes.DTO.Requests
+﻿namespace Quotes.DTO.Requests.User
 {
-    public class LoginRequest
+    public class RegisterRequest
     {
+        public string? Name { get; set; }
         public string? Email { get; set; }
         public string? Password { get; set; }
         public string? DeviceType { get; set; }

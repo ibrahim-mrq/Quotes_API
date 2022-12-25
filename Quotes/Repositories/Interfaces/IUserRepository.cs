@@ -1,4 +1,4 @@
-﻿using Quotes.DTO.Requests;
+﻿using Quotes.DTO.Requests.User;
 using Quotes.Helper;
 using Quotes.Models;
 
@@ -20,7 +20,7 @@ namespace Quotes.Repositories.Interfaces
         string GenerateToken(User user);
         int? IsValideteToken(string token);
 
-        void SendEmail(string to, string subject, string html, string from);
+        void SendEmail(string From, string To, string Subject, string Body);
 
     }
 }

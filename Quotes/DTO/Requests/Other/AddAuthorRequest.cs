@@ -1,4 +1,4 @@
-﻿namespace Quotes.DTO.Requests
+﻿namespace Quotes.DTO.Requests.Other
 {
     public class AddAuthorRequest
     {

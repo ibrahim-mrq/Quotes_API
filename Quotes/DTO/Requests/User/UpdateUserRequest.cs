@@ -1,4 +1,4 @@
-﻿namespace Quotes.DTO.Requests
+﻿namespace Quotes.DTO.Requests.User
 {
     public class UpdateUserRequest
     {

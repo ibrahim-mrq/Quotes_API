@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Quotes.Base;
-using Quotes.DTO.Requests;
+using Quotes.DTO.Requests.Other;
 using Quotes.Repositories.Interfaces;
 
 namespace Quotes.Controllers

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Quotes.Authorize;
 using Quotes.Base;
-using Quotes.DTO.Requests;
+using Quotes.DTO.Requests.User;
 using Quotes.Repositories.Interfaces;
 
 namespace Quotes.Controllers
@@ -16,6 +16,19 @@ namespace Quotes.Controllers
         public UserController(IUserRepository repository)
         {
             this.repository = repository;
+        }
+
+        [AllowAnonymous]
+        [HttpPost("send_email")]
+        public IActionResult SendEmail()
+        {
+            repository.SendEmail(
+                "seven.arts.ku@gmail.com",
+                 "abo.mahroq@gmail.com",
+                 "Subject",
+                 "Body"
+                 );
+            return Ok();
         }
 
         [AllowAnonymous]

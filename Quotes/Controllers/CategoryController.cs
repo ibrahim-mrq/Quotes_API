@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Quotes.Base;
-using Quotes.DTO.Requests;
+using Quotes.DTO.Requests.Other;
 using Quotes.Repositories.Interfaces;
 
 namespace Quotes.Controllers
 {
-  //  [Route("api/[controller]")]
+    //  [Route("api/[controller]")]
     [Route("api/category")]
     [ApiController]
     public class CategoryController : BaseController
