@@ -10,7 +10,7 @@ namespace Quotes.Helper
         public static readonly string TYPE_DATE_TIME_FORMATER = "dd-MMM-yyyy HH:mm tt";
 
 
-        public static OperationType InputValidation(int value)
+        public static OperationType InputValidation(int? value)
         {
             var operationType = new OperationType()
             {

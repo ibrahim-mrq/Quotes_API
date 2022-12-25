@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Quotes.Authorize;
 using Quotes.Helper;
 using Quotes.Repositories.Interfaces;
 using Quotes.Repositories.other;
@@ -27,8 +26,6 @@ namespace Quotes.Application
             builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
             builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
-
-            builder.Services.AddScoped<IJwtUtils, JwtUtils>();
         }
 
         public void AddAutoMapper()

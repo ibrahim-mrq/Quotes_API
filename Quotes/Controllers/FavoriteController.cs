@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Quotes.Authorize;
 using Quotes.Base;
 using Quotes.DTO.Requests;
 using Quotes.Repositories.Interfaces;
@@ -13,26 +12,11 @@ namespace Quotes.Controllers
     {
 
         private readonly IFavoriteRepository repository;
-        private readonly IJwtUtils jwtToken;
 
-        public FavoriteController(IFavoriteRepository repository, IJwtUtils jwtToken)
+        public FavoriteController(IFavoriteRepository repository)
         {
             this.repository = repository;
-            this.jwtToken = jwtToken;
         }
-
-
-        [HttpPost("create_token")]
-        public IActionResult CreateToken([FromForm] string email, [FromForm] int id)
-        {
-            return Ok(new
-            {
-                email = email,
-                id = id,
-                token = jwtToken.GenerateToken(email, id)
-            });
-        }
-
 
         [HttpPost("add_to_favorite")]
         public IActionResult Add([FromForm] AddFavoriteRequest request)

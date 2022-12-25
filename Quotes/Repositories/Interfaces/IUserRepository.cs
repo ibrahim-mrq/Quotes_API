@@ -8,15 +8,16 @@ namespace Quotes.Repositories.Interfaces
     {
         OperationType Login(LoginRequest request);
         OperationType Register(RegisterRequest request);
-        OperationType Update(int Id, RegisterRequest request);
+        OperationType Update(UpdateUserRequest request);
         OperationType Delete(int Id);
+        OperationType Retrieve(int Id);
         OperationType GetAll();
         OperationType GetById(int Id);
         OperationType Clear();
 
-        public string GenerateToken(string Email, int Id);
-        public string GenerateToken(User user);
-        public int? IsValideteToken(string token);
+        string GenerateToken(string Email, int Id);
+        string GenerateToken(User user);
+        int? IsValideteToken(string token);
 
     }
 }

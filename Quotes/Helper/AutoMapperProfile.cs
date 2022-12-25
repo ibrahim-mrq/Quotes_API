@@ -11,6 +11,7 @@ namespace Quotes.Helper
         {
 
             CreateMap<RegisterRequest, User>();
+            CreateMap<UpdateUserRequest, User>();
             CreateMap<User, UserResponse>();
 
             CreateMap<AddQuoteRequest, Quote>();

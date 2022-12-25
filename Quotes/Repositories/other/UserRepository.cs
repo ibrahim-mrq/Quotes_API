@@ -7,7 +7,6 @@ using Quotes.Models;
 using Quotes.Repositories.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Policy;
 using System.Text;
 
 namespace Quotes.Repositories.other
@@ -34,7 +33,7 @@ namespace Quotes.Repositories.other
             {
                 return Constants.NotFoundResponse("User Not Found!", null);
             }
-            if (!Constants.ValidateHash(request.Password, localUser.PasswordHash, localUser.PasswordSalt))
+            if (!Constants.ValidateHash(request.Password + "", localUser.PasswordHash, localUser.PasswordSalt))
             {
                 return Constants.UnprocessableEntityResponse("The password is incorrect!", null); ;
             }
@@ -67,9 +66,10 @@ namespace Quotes.Repositories.other
                 localUser.DeviceType = request.DeviceType;
                 localUser.Token = GenerateToken(localUser);
 
-                Constants.GenerateHash(request.Password, out hash, out salt);
+                Constants.GenerateHash($"{request.Password}", out hash, out salt);
                 localUser.PasswordHash = hash;
                 localUser.PasswordSalt = salt;
+                localUser.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
 
                 _dbContext.Users.Update(localUser);
                 _dbContext.SaveChanges();
@@ -80,7 +80,7 @@ namespace Quotes.Repositories.other
                 return Constants.BadRequestResponse("Email Already Exist!", null);
             }
             var currentItem = _map.Map<User>(request);
-            Constants.GenerateHash(request.Password, out hash, out salt);
+            Constants.GenerateHash($"{request.Password}", out hash, out salt);
             currentItem.PasswordHash = hash;
             currentItem.PasswordSalt = salt;
             currentItem.Token = GenerateToken(currentItem);
@@ -89,53 +89,71 @@ namespace Quotes.Repositories.other
             return Constants.SuccessResponse("Register successfully", new { user = _map.Map<UserResponse>(currentItem) });
         }
 
-        public OperationType Update(int AuthorId, RegisterRequest request)
+        public OperationType Update(UpdateUserRequest request)
         {
-            var localItem = _dbContext.Authors.Where(x => x.Id.Equals(AuthorId) && x.IsDelete == false).SingleOrDefault();
-            if (localItem == null)
-            {
-                return Constants.NotFoundResponse("Author Id not exists!", null);
-            }
             if (!Constants.InputValidation(request).Status)
             {
                 return Constants.InputValidation(request);
             }
-            if (!Constants.InputLength(request, 4).Status)
-            {
-                return Constants.InputLength(request, 4);
-            }
-            return Constants.SuccessResponse("Update Author successfully", null);
-        }
-
-        public OperationType Delete(int AuthorId)
-        {
-            var localItem = _dbContext.Authors.Where(x => x.Id.Equals(AuthorId) && x.IsDelete == false).SingleOrDefault();
+            var localItem = _dbContext.Users.Where(x => x.Id.Equals(request.Id) && x.IsDelete == false).SingleOrDefault();
             if (localItem == null)
             {
-                return Constants.NotFoundResponse("Author Id Not Found!", null);
+                return Constants.NotFoundResponse("User Id not Found!", null);
+            }
+            localItem.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
+            var currentItem = _map.Map(request, localItem);
+            _dbContext.Users.Update(currentItem);
+            _dbContext.SaveChanges();
+            return Constants.SuccessResponse("Update User successfully", new { User = _map.Map<UserResponse>(currentItem) });
+        }
+
+        public OperationType Delete(int Id)
+        {
+            var localItem = _dbContext.Users.Where(x => x.Id.Equals(Id) && x.IsDelete == false).SingleOrDefault();
+            if (localItem == null)
+            {
+                return Constants.NotFoundResponse("User Id Not Found!", null);
             }
             localItem.IsDelete = true;
-            _dbContext.Authors.Update(localItem);
+            localItem.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
+            _dbContext.Users.Update(localItem);
             _dbContext.SaveChanges();
-            return Constants.SuccessResponse("Author Deleted successfully", new { Author = _map.Map<AuthorResponse>(localItem) });
+            return Constants.SuccessResponse("User Deleted successfully", null);
+        }
+
+        public OperationType Retrieve(int Id)
+        {
+            var localItem = _dbContext.Users.Where(x => x.Id.Equals(Id)).SingleOrDefault();
+            if (localItem == null)
+            {
+                return Constants.NotFoundResponse("User Id Not Found!", null);
+            }
+            else if (localItem.IsDelete == false)
+            {
+                return Constants.BadRequestResponse("The user already exists!", null);
+            }
+            localItem.IsDelete = false;
+            localItem.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
+            _dbContext.Users.Update(localItem);
+            _dbContext.SaveChanges();
+            return Constants.SuccessResponse("User Retrieved successfully", new { user = _map.Map<UserResponse>(localItem) });
         }
 
         public OperationType GetAll()
         {
-            var localList = _dbContext.Authors.Where(x => x.IsDelete == false).ToList();
-            var filter = _map.Map<List<Author>, List<AuthorResponse>>(localList);
-            return Constants.SuccessResponse("successfull", new { Authors = filter });
+            var localList = _dbContext.Users.Where(x => x.IsDelete == false).ToList();
+            var filter = _map.Map<List<User>, List<UserResponse>>(localList);
+            return Constants.SuccessResponse("successfull", new { Users = filter });
         }
 
-        public OperationType GetById(int UserId)
+        public OperationType GetById(int Id)
         {
-            var localList = _dbContext.Users.Where(x => x.Id.Equals(UserId) && x.IsDelete == false).FirstOrDefault();
+            var localList = _dbContext.Users.Where(x => x.Id.Equals(Id) && x.IsDelete == false).FirstOrDefault();
             if (localList == null)
             {
                 return Constants.NotFoundResponse("User Id not exists!", null);
             }
-            return Constants.SuccessResponse("successfull", new { User = localList });
-            //   return Constants.SuccessResponse("successfull", new { Author = _map.Map<AuthorResponse>(localList) });
+            return Constants.SuccessResponse("successfull", new { User = _map.Map<UserResponse>(localList) });
         }
 
         public OperationType Clear()
@@ -176,7 +194,7 @@ namespace Quotes.Repositories.other
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature),
                 Subject = new ClaimsIdentity(
                     new Claim[] {
-                        new Claim(JwtRegisteredClaimNames.Email , user.Email),
+                        new Claim(JwtRegisteredClaimNames.Email , $"{user.Email}"),
                         new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString()),
                         new Claim("userId" , user.Id.ToString()),
                     }

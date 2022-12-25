@@ -12,10 +12,10 @@ namespace Quotes.Middlewares
             _next = next;
         }
 
-        public async Task Invoke(HttpContext context, IUserRepository userRepository, IJwtUtils jwtUtils)
+        public async Task Invoke(HttpContext context, IUserRepository userRepository)
         {
             var token = context.Request.Headers["token"].FirstOrDefault()?.Split(" ").Last();
-            int? userId = jwtUtils.IsValideteToken(token);
+            int? userId = userRepository.IsValideteToken(token);
             if (userId == null)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
