@@ -7,11 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 //builder.Services.AddCors();
 // Add services to the container.
-builder.Services.AddControllers();
+
+//builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//builder.Services.AddControllers(x => x.Filters.Add<AuthorizeAttribute>());
+builder.Services.AddControllers(x => x.Filters.Add<AuthorizeAttribute>());
 BuilderServices builderServices = new(builder);
 builderServices.AddScoped();
 builderServices.AddDataBase();
@@ -32,7 +33,7 @@ app.UseHttpsRedirection();
 
 //app.UseAuthorization();
 //app.UseAuthentication();
-//app.UseMiddleware<JwtTokenMiddleware>();
+app.UseMiddleware<JwtTokenMiddleware>();
 
 app.MapControllers();
 

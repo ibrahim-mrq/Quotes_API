@@ -16,6 +16,7 @@ namespace Quotes.Models
         public byte[]? PasswordHash { get; set; }
         public byte[]? PasswordSalt { get; set; }
         public string? Token { get; set; }
+        public DateTime? ExpirationToken { get; set; }
 
     }
 }

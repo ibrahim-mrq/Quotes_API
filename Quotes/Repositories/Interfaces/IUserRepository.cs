@@ -12,10 +12,11 @@ namespace Quotes.Repositories.Interfaces
         OperationType Delete(int Id);
         OperationType Retrieve(int Id);
         OperationType GetAll();
-        OperationType GetById(int Id);
+        OperationType GetUser(int Id);
+        User? GetUserById(int Id);
+
         OperationType Clear();
 
-        string GenerateToken(string Email, int Id);
         string GenerateToken(User user);
         int? IsValideteToken(string token);
 

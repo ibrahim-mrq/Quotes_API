@@ -18,6 +18,16 @@ namespace Quotes.Base
             };
         }
 
+        public int GetUserId()
+        {
+            var userId = HttpContext.Items["userId"];
+            int Id = 0;
+            if (userId != null)
+            {
+                Id = (int)userId;
+            }
+            return Id;
+        }
 
     }
 }

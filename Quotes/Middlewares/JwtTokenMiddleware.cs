@@ -1,5 +1,4 @@
-﻿using Quotes.Authorize;
-using Quotes.Repositories.Interfaces;
+﻿using Quotes.Repositories.Interfaces;
 
 namespace Quotes.Middlewares
 {
@@ -15,21 +14,14 @@ namespace Quotes.Middlewares
         public async Task Invoke(HttpContext context, IUserRepository userRepository)
         {
             var token = context.Request.Headers["token"].FirstOrDefault()?.Split(" ").Last();
-            int? userId = userRepository.IsValideteToken(token);
-            if (userId == null)
+            int? userId = userRepository.IsValideteToken($"{token}");
+            if (userId != null)
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                _ = context.Response.WriteAsJsonAsync(new
-                {
-                    status = false,
-                    message = "You are festic, unauthorized",
-                    code = 401,
-                });
+                context.Items["User"] = userRepository.GetUserById(userId.Value);
+                context.Items["token"] = token;
+                context.Items["userId"] = userId;
             }
-            else
-            {
-                await _next(context);
-            }
+            await _next(context);
         }
 
     }

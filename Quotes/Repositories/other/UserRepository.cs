@@ -40,6 +40,7 @@ namespace Quotes.Repositories.other
             localUser.DeviceToken = request.DeviceToken;
             localUser.DeviceType = request.DeviceType;
             localUser.Token = GenerateToken(localUser);
+            localUser.ExpirationToken = Constants.EXPIRATION_TOKEN_DATE;
 
             _dbContext.Users.Update(localUser);
             _dbContext.SaveChanges();
@@ -65,6 +66,7 @@ namespace Quotes.Repositories.other
                 localUser.DeviceToken = request.DeviceToken;
                 localUser.DeviceType = request.DeviceType;
                 localUser.Token = GenerateToken(localUser);
+                localUser.ExpirationToken = Constants.EXPIRATION_TOKEN_DATE;
 
                 Constants.GenerateHash($"{request.Password}", out hash, out salt);
                 localUser.PasswordHash = hash;
@@ -84,6 +86,7 @@ namespace Quotes.Repositories.other
             currentItem.PasswordHash = hash;
             currentItem.PasswordSalt = salt;
             currentItem.Token = GenerateToken(currentItem);
+            currentItem.ExpirationToken = Constants.EXPIRATION_TOKEN_DATE;
             _dbContext.Users.Add(currentItem);
             _dbContext.SaveChanges();
             return Constants.SuccessResponse("Register successfully", new { user = _map.Map<UserResponse>(currentItem) });
@@ -146,7 +149,7 @@ namespace Quotes.Repositories.other
             return Constants.SuccessResponse("successfull", new { Users = filter });
         }
 
-        public OperationType GetById(int Id)
+        public OperationType GetUser(int Id)
         {
             var localList = _dbContext.Users.Where(x => x.Id.Equals(Id) && x.IsDelete == false).FirstOrDefault();
             if (localList == null)
@@ -154,6 +157,16 @@ namespace Quotes.Repositories.other
                 return Constants.NotFoundResponse("User Id not exists!", null);
             }
             return Constants.SuccessResponse("successfull", new { User = _map.Map<UserResponse>(localList) });
+        }
+
+        public User? GetUserById(int Id)
+        {
+            var localList = _dbContext.Users.Where(x => x.Id.Equals(Id) && x.IsDelete == false).FirstOrDefault();
+            if (localList == null)
+            {
+                return null;
+            }
+            return localList;
         }
 
         public OperationType Clear()
@@ -165,32 +178,12 @@ namespace Quotes.Repositories.other
         }
 
 
-        public string GenerateToken(string Email, int Id)
-        {
-            var key = Encoding.ASCII.GetBytes("LZImjD2eUbUxhxjIdyOJuYT4FjWhKSJy");
-            var descriptor = new SecurityTokenDescriptor
-            {
-                Expires = DateTime.UtcNow.AddMonths(12),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature),
-                Subject = new ClaimsIdentity(
-                    new Claim[] {
-                        new Claim(JwtRegisteredClaimNames.Email , Email),
-                        new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString()),
-                        new Claim("userId" , Id.ToString()),
-                    }
-                )
-            };
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.CreateToken(descriptor);
-            return handler.WriteToken(token);
-        }
-
         public string GenerateToken(User user)
         {
             var key = Encoding.ASCII.GetBytes("LZImjD2eUbUxhxjIdyOJuYT4FjWhKSJy");
             var descriptor = new SecurityTokenDescriptor
             {
-                Expires = DateTime.UtcNow.AddMonths(12),
+                Expires = Constants.EXPIRATION_TOKEN_DATE,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature),
                 Subject = new ClaimsIdentity(
                     new Claim[] {
@@ -211,7 +204,6 @@ namespace Quotes.Repositories.other
             {
                 return null;
             }
-
             var key = Encoding.ASCII.GetBytes("LZImjD2eUbUxhxjIdyOJuYT4FjWhKSJy");
             var handler = new JwtSecurityTokenHandler();
             try
@@ -222,11 +214,9 @@ namespace Quotes.Repositories.other
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    // ClockSkew = TimeSpan.FromMinutes(1),
                     ClockSkew = TimeSpan.Zero,
 
                 }, out SecurityToken validetedToken);
-
                 var jwtToken = (JwtSecurityToken)validetedToken;
                 var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "userId").Value);
                 return userId;
