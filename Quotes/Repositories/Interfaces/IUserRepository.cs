@@ -22,6 +22,9 @@ namespace Quotes.Repositories.Interfaces
         string GenerateToken(User user);
         int? IsValideteToken(string token);
 
+        void SendEmail(string To, string Body);
+        void GenerateHash(string password, out byte[]? passwordHash, out byte[]? passwordSalt);
+        bool ValidateHash(string password, byte[]? passwordHash, byte[]? passwordSalt);
 
 
     }

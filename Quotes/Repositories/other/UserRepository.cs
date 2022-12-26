@@ -12,6 +12,8 @@ using MimeKit;
 using MimeKit.Text;
 using MailKit.Net.Smtp;
 using Quotes.DTO.Requests.User;
+using Twilio.Rest.Verify.V2.Service;
+using Twilio;
 
 namespace Quotes.Repositories.other
 {
@@ -112,11 +114,12 @@ namespace Quotes.Repositories.other
             {
                 return Constants.NotFoundResponse("Email Not Found!", null);
             }
-            localUser.Code = Constants.ValideResetPasswordCode();
-            localUser.ExpirationCode = DateTime.Now.AddMinutes(2);
-            _dbContext.Users.Update(localUser);
-            _dbContext.SaveChanges();
-            SendEmail("abo.mahroq@gmail.com", $"Your Reste Code is: {localUser.Code}\n you have 2 minite to ues it.");
+            /* localUser.Code = Constants.ValideResetPasswordCode();
+             localUser.ExpirationCode = DateTime.Now.AddMinutes(2);
+             _dbContext.Users.Update(localUser);
+             _dbContext.SaveChanges();
+             SendEmail("abo.mahroq@gmail.com", $"Your Reste Code is: {localUser.Code}\n you have 2 minite to ues it.");*/
+            SendPhone("asd");
             return Constants.SuccessResponse("check your email now", null);
         }
 
@@ -286,7 +289,7 @@ namespace Quotes.Repositories.other
         }
 
 
-        private void SendEmail(string To, string Body)
+        public void SendEmail(string To, string Body)
         {
             // create message
             var email = new MimeMessage();
@@ -307,13 +310,31 @@ namespace Quotes.Repositories.other
             smtp.Disconnect(true);
 
         }
-        private static void GenerateHash(String password, out byte[]? passwordHash, out byte[]? passwordSalt)
+        public void SendPhone(string Phone)
+        {
+            try
+            {
+                TwilioClient.Init("abo.mahroq@gmail.com", "aTSXZ!5&8=9dGe22");
+                var verificationCheck = VerificationCheckResource.Create(
+                    to: "+972592440530",
+                    code: "123456",
+                    pathServiceSid: "VAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                );
+                Console.WriteLine(verificationCheck.Status);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"error: {e.Message}");
+            }
+        }
+
+        public void GenerateHash(String password, out byte[]? passwordHash, out byte[]? passwordSalt)
         {
             using var hash = new System.Security.Cryptography.HMACSHA512();
             passwordHash = hash.ComputeHash(Encoding.UTF8.GetBytes(password));
             passwordSalt = hash.Key;
         }
-        private static Boolean ValidateHash(string password, byte[]? passwordHash, byte[]? passwordSalt)
+        public Boolean ValidateHash(string password, byte[]? passwordHash, byte[]? passwordSalt)
         {
             if (passwordHash == null || passwordSalt == null)
             {
