@@ -19,19 +19,6 @@ namespace Quotes.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("send_email")]
-        public IActionResult SendEmail()
-        {
-            repository.SendEmail(
-                "seven.arts.ku@gmail.com",
-                 "abo.mahroq@gmail.com",
-                 "Subject",
-                 "Body"
-                 );
-            return Ok();
-        }
-
-        [AllowAnonymous]
         [HttpPost("login")]
         public IActionResult Login([FromForm] LoginRequest request)
         {
@@ -43,6 +30,20 @@ namespace Quotes.Controllers
         public IActionResult Register([FromForm] RegisterRequest request)
         {
             return ReturnActionResult(repository.Register(request));
+        }
+
+        [AllowAnonymous]
+        [HttpPost("forgot_password")]
+        public IActionResult ForgotPassword([FromForm] ForgotPasswordRequest request)
+        {
+            return ReturnActionResult(repository.ForgotPassword(request));
+        }
+
+        [AllowAnonymous]
+        [HttpPost("reset_password")]
+        public IActionResult ResetPassword([FromForm] ResetPasswordRequest request)
+        {
+            return ReturnActionResult(repository.ResetPassword(request));
         }
 
         [HttpPut("update")]

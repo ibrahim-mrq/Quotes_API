@@ -3,6 +3,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Quotes.Helper;
 using Quotes.Models;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
@@ -22,7 +23,7 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
 
         if (user == null)
         {
-            var result = new { status = false, message = "unauthorized", code = 401, };
+            var result = new OperationType { Status = false, Message = "unauthorized", Code = 401, Data = null };
             context.HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Result = new JsonResult(result);
         }
@@ -31,13 +32,13 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
             var currentUser = (User)user;
             if (currentUser.Token != $"{token}")
             {
-                var result = new { status = false, message = "Invaled token!", code = 401, };
+                var result = new OperationType { Status = false, Message = "Invaled token!", Code = 401, Data = null };
                 context.HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Result = new JsonResult(result);
             }
             if (currentUser.ExpirationToken < DateTime.Now)
             {
-                var result = new { status = false, message = "Expiration token!", code = 401, };
+                var result = new OperationType { Status = false, Message = "Expiration token!", Code = 401, Data = null };
                 context.HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Result = new JsonResult(result);
             }

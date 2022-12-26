@@ -42,18 +42,18 @@ namespace Quotes.Repositories.other
             {
                 return Constants.NotFoundResponse("User Not Found!", null);
             }
-            if (!Constants.ValidateHash(request.Password + "", localUser.PasswordHash, localUser.PasswordSalt))
+            if (!ValidateHash(request.Password + "", localUser.PasswordHash, localUser.PasswordSalt))
             {
                 return Constants.UnprocessableEntityResponse("The password is incorrect!", null); ;
             }
             localUser.DeviceToken = request.DeviceToken;
             localUser.DeviceType = request.DeviceType;
             localUser.Token = GenerateToken(localUser);
-            localUser.ExpirationToken = Constants.EXPIRATION_TOKEN_DATE;
+            localUser.ExpirationToken = DateTime.Now.AddMonths(12);
 
             _dbContext.Users.Update(localUser);
             _dbContext.SaveChanges();
-            return Constants.SuccessResponse("Add Author successfully", new { user = _map.Map<UserResponse>(localUser) });
+            return Constants.SuccessResponse("Login successfully", new { user = _map.Map<UserResponse>(localUser) });
         }
 
         public OperationType Register(RegisterRequest request)
@@ -75,9 +75,9 @@ namespace Quotes.Repositories.other
                 localUser.DeviceToken = request.DeviceToken;
                 localUser.DeviceType = request.DeviceType;
                 localUser.Token = GenerateToken(localUser);
-                localUser.ExpirationToken = Constants.EXPIRATION_TOKEN_DATE;
+                localUser.ExpirationToken = DateTime.Now.AddMonths(12);
 
-                Constants.GenerateHash($"{request.Password}", out hash, out salt);
+                GenerateHash($"{request.Password}", out hash!, out salt!);
                 localUser.PasswordHash = hash;
                 localUser.PasswordSalt = salt;
                 localUser.UpdatedAt = DateTime.Now.ToString(Constants.TYPE_DATE_TIME_FORMATER);
@@ -91,14 +91,64 @@ namespace Quotes.Repositories.other
                 return Constants.BadRequestResponse("Email Already Exist!", null);
             }
             var currentItem = _map.Map<User>(request);
-            Constants.GenerateHash($"{request.Password}", out hash, out salt);
+            GenerateHash($"{request.Password}", out hash!, out salt!);
             currentItem.PasswordHash = hash;
             currentItem.PasswordSalt = salt;
             currentItem.Token = GenerateToken(currentItem);
-            currentItem.ExpirationToken = Constants.EXPIRATION_TOKEN_DATE;
+            currentItem.ExpirationToken = DateTime.Now.AddMonths(12);
             _dbContext.Users.Add(currentItem);
             _dbContext.SaveChanges();
             return Constants.SuccessResponse("Register successfully", new { user = _map.Map<UserResponse>(currentItem) });
+        }
+
+        public OperationType ForgotPassword(ForgotPasswordRequest request)
+        {
+            if (!Constants.InputValidation(request).Status)
+            {
+                return Constants.InputValidation(request);
+            }
+            var localUser = _dbContext.Users.Where(x => x.Email == request.Email && x.IsDelete == false).FirstOrDefault();
+            if (localUser == null)
+            {
+                return Constants.NotFoundResponse("Email Not Found!", null);
+            }
+            localUser.Code = Constants.ValideResetPasswordCode();
+            localUser.ExpirationCode = DateTime.Now.AddMinutes(2);
+            _dbContext.Users.Update(localUser);
+            _dbContext.SaveChanges();
+            SendEmail("abo.mahroq@gmail.com", $"Your Reste Code is: {localUser.Code}\n you have 2 minite to ues it.");
+            return Constants.SuccessResponse("check your email now", null);
+        }
+
+        public OperationType ResetPassword(ResetPasswordRequest request)
+        {
+            if (!Constants.InputValidation(request).Status)
+            {
+                return Constants.InputValidation(request);
+            }
+            var localUser = _dbContext.Users.Where(x => x.Email == request.Email && x.IsDelete == false).FirstOrDefault();
+            if (localUser == null)
+            {
+                return Constants.NotFoundResponse("Email Not Found!", null);
+            }
+            if (request.Code != localUser.Code)
+            {
+                return Constants.NotFoundResponse("Invalid Code!", null);
+            }
+            if (localUser.ExpirationCode < DateTime.Now)
+            {
+                return Constants.NotFoundResponse("Expiration Code!", null);
+            }
+            GenerateHash($"{request.Password}", out byte[]? hash, out byte[]? salt);
+            localUser.PasswordHash = hash;
+            localUser.PasswordSalt = salt;
+            localUser.Token = "";
+            localUser.Code = "";
+            localUser.ExpirationToken = DateTime.Now;
+            localUser.ExpirationCode = DateTime.Now;
+            _dbContext.Users.Update(localUser);
+            _dbContext.SaveChanges();
+            return Constants.SuccessResponse("Reset Password successfully", null);
         }
 
         public OperationType Update(UpdateUserRequest request)
@@ -192,7 +242,7 @@ namespace Quotes.Repositories.other
             var key = Encoding.ASCII.GetBytes("LZImjD2eUbUxhxjIdyOJuYT4FjWhKSJy");
             var descriptor = new SecurityTokenDescriptor
             {
-                Expires = Constants.EXPIRATION_TOKEN_DATE,
+                Expires = DateTime.Now.AddMonths(12),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature),
                 Subject = new ClaimsIdentity(
                     new Claim[] {
@@ -206,7 +256,6 @@ namespace Quotes.Repositories.other
             var token = handler.CreateToken(descriptor);
             return handler.WriteToken(token);
         }
-
         public int? IsValideteToken(string token)
         {
             if (string.IsNullOrEmpty(token))
@@ -236,19 +285,20 @@ namespace Quotes.Repositories.other
             }
         }
 
-        public void SendEmail(string From, string To, string Subject, string Body)
+
+        private void SendEmail(string To, string Body)
         {
             // create message
             var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(From));
+            email.From.Add(MailboxAddress.Parse("seven.arts.ku@gmail.com"));
             email.To.Add(MailboxAddress.Parse(To));
-            email.Subject = Subject;
+            email.Subject = "Quites App, Reset Password";
             email.Body = new TextPart(TextFormat.Plain) { Text = Body };
 
             // send email
             using var smtp = new SmtpClient();
             smtp.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-            //      smtp.Connect("smtp.live.com", 587, SecureSocketOptions.StartTls);
+            // smtp.Connect("smtp.live.com", 587, SecureSocketOptions.StartTls);
             // smtp.Connect("smtp.office365.com", 587, SecureSocketOptions.StartTls);
             // smtp.Connect("email-smtp.[AWS REGION].amazonaws.com", 587, SecureSocketOptions.StartTls);
 
@@ -256,6 +306,26 @@ namespace Quotes.Repositories.other
             smtp.Send(email);
             smtp.Disconnect(true);
 
+        }
+        private static void GenerateHash(String password, out byte[]? passwordHash, out byte[]? passwordSalt)
+        {
+            using var hash = new System.Security.Cryptography.HMACSHA512();
+            passwordHash = hash.ComputeHash(Encoding.UTF8.GetBytes(password));
+            passwordSalt = hash.Key;
+        }
+        private static Boolean ValidateHash(string password, byte[]? passwordHash, byte[]? passwordSalt)
+        {
+            if (passwordHash == null || passwordSalt == null)
+            {
+                return false;
+            }
+            using var hash = new System.Security.Cryptography.HMACSHA512(passwordSalt);
+            var newPassHash = hash.ComputeHash(Encoding.UTF8.GetBytes(password));
+            for (int i = 0; i < newPassHash.Length; i++)
+            {
+                if (newPassHash[i] != passwordHash[i]) return false;
+            }
+            return true;
         }
 
 

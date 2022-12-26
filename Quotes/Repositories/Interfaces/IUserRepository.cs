@@ -8,6 +8,8 @@ namespace Quotes.Repositories.Interfaces
     {
         OperationType Login(LoginRequest request);
         OperationType Register(RegisterRequest request);
+        OperationType ForgotPassword(ForgotPasswordRequest request);
+        OperationType ResetPassword(ResetPasswordRequest request);
         OperationType Update(UpdateUserRequest request);
         OperationType Delete(int Id);
         OperationType Retrieve(int Id);
@@ -20,7 +22,7 @@ namespace Quotes.Repositories.Interfaces
         string GenerateToken(User user);
         int? IsValideteToken(string token);
 
-        void SendEmail(string From, string To, string Subject, string Body);
+
 
     }
 }

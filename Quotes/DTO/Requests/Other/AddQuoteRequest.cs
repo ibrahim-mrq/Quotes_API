@@ -5,7 +5,7 @@ namespace Quotes.DTO.Requests.Other
     public class AddQuoteRequest
     {
 
-        public string? Name { get; set; }
+        public string? Title { get; set; }
         public int? AuthorId { get; set; }
         public int? CategoryId { get; set; }
 

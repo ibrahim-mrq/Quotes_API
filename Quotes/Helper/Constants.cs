@@ -1,7 +1,4 @@
-﻿using Microsoft.VisualStudio.Services.Commerce;
-using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Quotes.Helper
 {
@@ -11,9 +8,13 @@ namespace Quotes.Helper
         public static readonly string TYPE_LOGO = "https://www.wepal.net/ar/uploads/2732018-073911PM-1.jpg";
         public static readonly string TYPE_LOCAL_URL = "https://localhost:7194/Images/";
         public static readonly string TYPE_DATE_TIME_FORMATER = "dd-MMM-yyyy HH:mm tt";
-        public static readonly DateTime EXPIRATION_TOKEN_DATE = DateTime.Now.AddMonths(12);
-        // public static readonly DateTime EXPIRATION_TOKEN_DATE = DateTime.Now.AddMinutes(2);
 
+
+        public static string ValideResetPasswordCode()
+        {
+            Random generator = new();
+            return generator.Next(0, 1000000).ToString("D6");
+        }
 
         public static bool IsValidEmail(string? email)
         {
@@ -22,7 +23,6 @@ namespace Quotes.Helper
             var regex = new Regex(pattern, RegexOptions.IgnoreCase);
             return regex.IsMatch(email);
         }
-
         public static OperationType InputValidation(int? value)
         {
             var operationType = new OperationType()
@@ -74,7 +74,6 @@ namespace Quotes.Helper
             operationType.Data = new { error = errorist };
             return operationType;
         }
-
         public static OperationType InputLength(object model, int Length)
         {
             var operationType = new OperationType()
@@ -102,7 +101,6 @@ namespace Quotes.Helper
             operationType.Data = new { error = errorist };
             return operationType;
         }
-
         public static OperationType InputValidationPasswordLength(string value)
         {
             var operationType = new OperationType()
@@ -119,7 +117,6 @@ namespace Quotes.Helper
             }
             return operationType;
         }
-
 
         public static OperationType SuccessResponse(String message, Object? data)
         {
@@ -160,27 +157,6 @@ namespace Quotes.Helper
                 Code = 404,
                 Data = data
             };
-        }
-
-
-        public static void GenerateHash(String password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hash = new System.Security.Cryptography.HMACSHA512())
-            {
-                passwordHash = hash.ComputeHash(Encoding.UTF8.GetBytes(password));
-                passwordSalt = hash.Key;
-            }
-        }
-
-        public static Boolean ValidateHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using var hash = new System.Security.Cryptography.HMACSHA512(passwordSalt);
-            var newPassHash = hash.ComputeHash(Encoding.UTF8.GetBytes(password));
-            for (int i = 0; i < newPassHash.Length; i++)
-            {
-                if (newPassHash[i] != passwordHash[i]) return false;
-            }
-            return true;
         }
 
 
